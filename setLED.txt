@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module cycle16ms(clk, segmentOn
+module setCurrentLED(clk, segmentOn
     );
     input clk;
      output [1:0] segmentOn;
