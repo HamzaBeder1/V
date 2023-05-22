@@ -36,7 +36,7 @@ clk, cathodeOutput
         if(cathodeCounter >= 50000001)
         begin
             cathodeCounter = 0;
-            numberTracker <= (currLED+1) % 10;
+            numberTracker <= (numberTracker +1) %10;
         end
         else
         begin
@@ -67,3 +67,6 @@ clk, cathodeOutput
             cathodeOutput <= 7'b11111111;
         endcase
             
+  end
+    assign BCDOutput = cathodeOutput;
+endmodule
