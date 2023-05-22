@@ -36,6 +36,10 @@ clk, number, cathodeOutput
             cathodeCounter = 0;
             number <= (currLED+1) % 10;
         end
+        else
+        begin
+            cathodeCounter <= cathodeCounter + 1;
+        end
         case(number)
         4'b0000:
             cathodeOutput <= 7'b0000001;
