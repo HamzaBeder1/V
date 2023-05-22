@@ -21,26 +21,28 @@
 
 
 module cathodeTrack(
-clk, number, cathodeOutput
+clk, cathodeOutput
     );
     input clk;
-    input [3:0] number = 0;
-    output [6:0] cathodeOutput;
+    output [6:0] BCDOutput;
     
+      
     reg [25:0] cathodeCounter = 0;
+    reg [6:0] cathodeOutput = 0;
+    reg [3:0] numberTracker = 0;
     
     always @(posedge clk)
     begin
-         if(cathodeCounter >= 50000001)
+        if(cathodeCounter >= 50000001)
         begin
             cathodeCounter = 0;
-            number <= (currLED+1) % 10;
+            numberTracker <= (currLED+1) % 10;
         end
         else
         begin
             cathodeCounter <= cathodeCounter + 1;
         end
-        case(number)
+        case(numberTracker)
         4'b0000:
             cathodeOutput <= 7'b0000001;
         4'b0001:
