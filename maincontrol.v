@@ -24,10 +24,11 @@ module segmentcontrol(clk, anodeON
     );
     output [3:0] anodeON;
     input clk;
+    output [6:0] cathodeOFF;
     
     wire [1:0] currLED;
     reg [3:0] anodeTracker;
-    reg [3:0] cathodeTracker;
+    
     
     setCurrentLED x (clk, currLED);
     always @(posedge clk)
