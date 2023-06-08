@@ -1,4 +1,4 @@
-# 7SegmentControl
+# Seven Segment Control Using UART
 
 # Description
 This project allows the control of the seven-segment display on the BASYS3 FPGA Board. Using the switches on the board, you can change select which digit you want to adjust and set it to a number ranging from 0-9. By pressing a button, you can then send the displayed numbers to a computer using the UART protocol.
