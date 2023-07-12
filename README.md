@@ -1,6 +1,6 @@
 ### MIPS_Processor
 
-#Description
+# Description
 The purpose of this project is to create a small implementation of the MIPS ISA using Verilog. A Harvard architecture will be used with separate instruction and data memories.
 The sizes of the memories are limited, which is why byte addressing is not used.
 
