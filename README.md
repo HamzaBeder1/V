@@ -18,9 +18,5 @@ The following MIPS instructions will be executed in this project:
 * srl
 * beq
 * bne
-* bgt
-* blt
-* slt
 * j
 * jr
-* jal
