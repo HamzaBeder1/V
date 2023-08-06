@@ -12,7 +12,7 @@ def new_file():
     files[len(files)-1].add(newFile, text = 'Untitled')
     horizontal_scroll = Scrollbar(newFile, width=30, orient=HORIZONTAL)
     vertical_scroll = Scrollbar(newFile, width=30, orient=VERTICAL)
-    textbox = Text(newFile, xscrollcommand=horizontal_scroll.set, yscrollcommand=vertical_scroll.set, wrap="none")
+    textbox = Text(newFile, xscrollcommand=horizontal_scroll.set, yscrollcommand=vertical_scroll.set, wrap="none", undo=True)
     vertical_scroll.config(command=textbox.yview)
     horizontal_scroll.config(command=textbox.xview)
 
@@ -61,6 +61,7 @@ def save():
         if f:
             with open(f, 'w') as newfile:
                 newfile.write(texts[len(texts)-1][0].get(0.0,END))
+
 def main():
     new_window()
     windows[len(windows)-1].mainloop()
