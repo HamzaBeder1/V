@@ -1,8 +1,10 @@
 from tkinter import *
 from tkinter import ttk
+from tkinter import filedialog
 
 windows = []
 files = []
+texts = []
 def new_file():
     global windows
     global files
@@ -18,6 +20,8 @@ def new_file():
     horizontal_scroll.pack(fill=X, side=BOTTOM)
     vertical_scroll.pack(fill=Y, side=RIGHT)
     textbox.pack(fill=BOTH, expand=True)
+
+    texts.append(textbox)
 def new_window():
     tk = Tk()
     file = ttk.Notebook(tk)
@@ -36,9 +40,14 @@ def create_menu():
     toolbar.add_cascade(label='View', menu=View)
     File.add_command(label='New File', command=new_file)
     File.add_command(label='New Window', command=new_window)
+    File.add_command(label = 'Save as', command = save_as)
 
     windows[len(windows)-1].config(menu=toolbar)
 
+def save_as():
+    f = filedialog.asksaveasfilename(defaultextension=".txt", )
+    with open(f, 'w') as newfile:
+        newfile.write(texts[len(texts)-1].get(0.0, END))
 
 def main():
     new_window()
