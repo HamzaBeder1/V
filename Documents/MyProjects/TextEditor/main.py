@@ -21,7 +21,7 @@ def new_file():
     vertical_scroll.pack(fill=Y, side=RIGHT)
     textbox.pack(fill=BOTH, expand=True)
 
-    texts.append(textbox)
+    texts.append([textbox, 0])
 def new_window():
     tk = Tk()
     file = ttk.Notebook(tk)
@@ -41,14 +41,26 @@ def create_menu():
     File.add_command(label='New File', command=new_file)
     File.add_command(label='New Window', command=new_window)
     File.add_command(label = 'Save as', command = save_as)
-
+    File.add_command(label = 'Save', command = save)
     windows[len(windows)-1].config(menu=toolbar)
 
 def save_as():
-    f = filedialog.asksaveasfilename(defaultextension=".txt", )
-    with open(f, 'w') as newfile:
-        newfile.write(texts[len(texts)-1].get(0.0, END))
-
+    f = filedialog.asksaveasfilename(defaultextension=".txt")
+    if(f):
+        with open(f, 'w') as newfile:
+            newfile.write(texts[len(texts)-1][0].get(0.0, END))
+        texts[len(texts)-1].append(f)
+    else:
+        return -1
+def save():
+    if texts[len(texts)-1][1] == 0:
+        if save_as() != -1:
+            texts[len(texts)-1][1] = 1
+    else:
+        f = texts[len(texts)-1][2]
+        if f:
+            with open(f, 'w') as newfile:
+                newfile.write(texts[len(texts)-1][0].get(0.0,END))
 def main():
     new_window()
     windows[len(windows)-1].mainloop()
