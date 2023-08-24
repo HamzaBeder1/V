@@ -1,46 +1,31 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 05/24/2023 04:33:54 PM
-// Design Name: 
-// Module Name: TopUART
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
-
-module UARTbyte#(parameter cycle_BRG = 10416, idle = 2'b00, loading = 2'b01, sending = 2'b11, done = 2'b10, debounce_seconds = 2500)(
-input clk, input [7:0] data_send, input transmit, output reg Txd, output reg Done
+module UART_byte#(parameter cycle_BRG = 10416, idle = 2'b00, loading = 2'b01, sending = 2'b11, done = 2'b10, debounce_seconds = 2500)(
+input clk, input rst, input [7:0] data_send, input transmit, output reg Txd, output Done
     );
     
-    reg [13:0] BRG_counter = 0;
-    reg [9:0] bit_counter = 0;
-    reg BRG_SET;            //set to 1 every (1/9600) seconds
-    reg BRG_SET_tracker;     //used so that I can set BRG_SET in two always blocks
+    reg [13:0] BRG_counter;
+    reg [9:0] bit_counter;
+    reg BRG_SET;
     
-    reg [1:0] state = 0;
+    reg [1:0] state;
+    reg [1:0] nextstate;
     reg load = 0;
     reg shift = 0;
     reg clear = 0;
-    reg [9:0] shiftright_register = 0;
-    
+    reg [9:0] shiftright_register;
     reg[26:0] debounce_counter = 0;
     
-   //BRG for UART
+    assign Done = (state == done)? 1:0;
+   //BRG, creating 9600 pulses per second
     always @(posedge clk)
     begin
-        if(BRG_counter == cycle_BRG)
+        state<=nextstate;
+        if(rst)
+            BRG_counter <= 0;
+        else
+        begin
+            if(BRG_counter == cycle_BRG)
             begin
                 BRG_SET <= 1;
                 BRG_counter <= 0;
@@ -50,29 +35,29 @@ input clk, input [7:0] data_send, input transmit, output reg Txd, output reg Don
                 BRG_counter <= BRG_counter + 1;
                 BRG_SET <= 0;
             end
+        end
     end
     
     //controller for UART
-    always@(posedge clk)
+    always @(transmit, state,BRG_SET, bit_counter)
     begin
-       case(state) 
+        nextstate<=idle;
+        load<=0;
+        shift<=0;
+        clear<=0;
+        case(state) 
             idle: //waiting for transmit button to be pressed
             begin
                 if(transmit)
                 begin
-                    state <= loading;
+                    nextstate <= loading;
                     load <= 1;
-                    shift <= 0;
-                    clear <= 0;
                     Txd <= 1;
                 end
                 
                 else
                 begin
-                    state <= idle;
-                    load <= 0;
-                    shift <= 0;
-                    clear <= 0;
+                    nextstate <= idle;
                     Txd <= 1;
                 end
             end 
@@ -81,19 +66,15 @@ input clk, input [7:0] data_send, input transmit, output reg Txd, output reg Don
             begin
                 if(BRG_SET)
                 begin
-                    state <= sending;
-                    load <= 0;
+                    nextstate <= sending;
                     shift <= 1;
-                    clear <= 0;
                     Txd <= 1;
                 end
                 
                 else
                 begin
-                    state <= loading;
+                    nextstate <= loading;
                     load <= 1;
-                    shift <= 0;
-                    clear <= 0;
                     Txd <= 1;
                 end
             end
@@ -102,47 +83,25 @@ input clk, input [7:0] data_send, input transmit, output reg Txd, output reg Don
             begin
                 if(bit_counter == 10)
                 begin
-                    state <= done;
-                    load <= 0;
-                    shift <= 0;
+                    nextstate <= done;
                     clear <= 1;
                     Txd <= 1;
                 end
                 else
                 begin
-                    state <= sending;
-                    load <= 0;
+                    nextstate <= sending;
                     shift <= 1;
-                    clear <= 0;
                     Txd <= shiftright_register[0];
                 end
             end
            
-            done: //once 10 bits set, keep clear high and wait for BRG_SET to become 1 so that data path can reset the bit counter and BRG counter
+            done: //once 10 bits sent, keep clear high and wait for BRG_SET to become 1 so that data path can reset the bit counter
             begin
-                if(debounce_counter == debounce_seconds)
-                begin
-                    Done <= 0;
-                    state <= idle;
-                    load <= 0;
-                    shift <= 0;
-                    clear <= 0;
-                    Txd <= 1;
-                    debounce_counter <= 0;
-                end
-                else
-                begin
-                    Done <= 1;
-                    state <= done;
-                    load <= 0;
-                    shift <= 0;
-                    clear <= 1;
-                    Txd <= 1;
-                    debounce_counter <= debounce_counter + 1;
-                end
+                nextstate<=idle;
             end  
-       endcase 
+       endcase   
     end
+
     
     //data path for UART
     always @(posedge BRG_SET)
@@ -160,7 +119,6 @@ input clk, input [7:0] data_send, input transmit, output reg Txd, output reg Don
         else if(clear)
         begin
             bit_counter <= 0; 
-        end    
+        end   
     end
     
-endmodule
