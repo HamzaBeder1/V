@@ -1,4 +1,6 @@
 `timescale 1ns / 1ps
+
+`timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
 // Engineer: 
@@ -20,18 +22,28 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module sevensegment#(parameter sevensegment_cycle = 1600000, debounce = 500, selecting = 1'b0, debouncing = 1'b1)(input clk, input [3:0] number, input [3:0] currLED, output reg [3:0] anodeOutput, output reg [7:0] cathodeOutput, output reg [3:0] LED0 = 0, output reg [3:0] LED1 = 0, output reg [3:0] LED2 = 0, output reg [3:0] LED3 = 0);
-   
-    reg LEDSET = 0;
-    reg [3:0] currAnode = 4'b1000;
-    reg [19:0] LEDCycleCounter = 0;
-    reg [7:0] cathodeSource = 0;
-    
-    
+module sevensegment#(parameter cycleBits = 21, sevensegment_cycle = 1600000)(input clk, input rst, input [3:0] number, input [3:0] currLED, output reg [3:0] anodeOutput, output reg [7:0] cathodeOutput);
+
+reg LEDSET;
+reg [3:0] currAnode;
+reg [(cycleBits-1):0] LEDCycleCounter;
+reg [3:0] cathodeSource;
+reg [3:0] LED0, LED1, LED2, LED3;
+
+always@(posedge rst)
+begin
+    LEDCycleCounter <=0;
+    LED0 = 4'b1010;
+    LED1 = 4'b1010;
+    LED2 = 4'b1010;
+    LED3 = 4'b1010;
+    currAnode <= 4'b1000;
+end
+
 always@(posedge clk)
 begin
     begin
-        if(LEDCycleCounter >= sevensegment_cycle/4)
+        if(LEDCycleCounter == sevensegment_cycle/4)
         begin
             LEDCycleCounter <= 0;
             LEDSET <= 1;
@@ -56,8 +68,8 @@ end
 
 always@(posedge clk)
 begin
-        case(currAnode)
-            4'b1000:
+    case(currAnode)
+        4'b1000:
             begin
                 if(currAnode == currLED)
                 begin
