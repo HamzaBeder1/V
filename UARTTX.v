@@ -1,121 +1,136 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 05/24/2023 04:33:54 PM
-// Design Name: 
-// Module Name: TopUART
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
-
-module UARTTX#(parameter idle = 2'b00, sendfirst = 2'b01, sendsecond = 2'b10, debouncing = 2'b11, debounce = 50)(
-input clk, input [7:0] first_byte, input [7:0] second_byte, input transmit, output reg Txd, output reg Done
+module UART_byte#(parameter cycle_BRG = 10416, idle = 2'b00, loading = 2'b01, sending = 2'b11, done = 2'b10, debounce_seconds = 2500)(
+input clk, input rst, input [7:0] data_send, input transmit, output reg Txd, output reg Done
     );
-    reg transmit1;
-    reg transmit2;
-    reg [25:0] debounce_counter = 0;
-    wire Txd1;
-    wire Txd2;
-    reg [1:0] state = 0;
-    wire Done1;
-    wire Done2;
-    UARTbyte byte1 (clk, first_byte, transmit1,Txd1, Done1);
-    UARTbyte byte2 (clk, second_byte, transmit2,Txd2, Done2);
     
-    always@(posedge clk)
+    reg [13:0] BRG_counter;
+    reg [9:0] bit_counter;
+    reg BRG_SET;
+    
+    reg [1:0] state;
+    reg [1:0] nextstate;
+    reg load = 0;
+    reg shift = 0;
+    reg clear = 0;
+    reg [9:0] shiftright_register;
+    
+    reg[26:0] debounce_counter = 0;
+    
+    always @(posedge rst)
     begin
-        case(state)
-            idle:
-                if(transmit)
-                begin
-                    transmit1 <= 1;
-                    transmit2 <= 0;
-                    state <= sendfirst;
-                    Txd<= Txd1;
-                    Done <= 0;
-                end
-                else
-                begin
-                    transmit1 <= 0;
-                    transmit2 <= 0;
-                    state <= idle;
-                    Txd<= 1;
-                    Done <= 0; 
-                end
-            
-            sendfirst:
-                if(Done1)
-                begin
-                    transmit1 <= 0;
-                    transmit2 <=1;
-                    state <= sendsecond;
-                    Txd <= Txd2;
-                    Done <= 0;
-                end
-                else
-                begin
-                    transmit1 <=0;
-                    transmit2 <= 0;
-                    state <= sendfirst;
-                    Txd <= Txd1;
-                    Done <= 0;
-                end
-             
-             sendsecond:
-                if(Done2)
-                begin
-                    transmit1<=0;
-                    transmit2 <= 0;
-                    state <= debouncing;
-                    Done <= 1;
-                    Txd <= 1;
-                end
-                else
-                begin
-                    transmit1<=0;
-                    transmit2<=0;
-                    state<=sendsecond;
-                    Done <= 0;
-                    Txd <= Txd2;
-                end
-             
-            debouncing:
-                if(debounce_counter == debounce)
-                    begin
-                    debounce_counter <= 0;
-                    transmit1<=0;
-                    transmit2<=0;
-                    state<=idle;
-                    Done <= 0;
-                    Txd <= 1;
-                    end
-                else
-                begin
-                    debounce_counter<=debounce_counter+1;
-                    transmit1<=0;
-                    transmit2<=0;
-                    state<=debouncing;
-                    Done <= 0;
-                    Txd <= 1;
-                end
-         endcase
+        BRG_counter <= 0;
+        bit_counter <=0;
+    end
+   //BRG, creating 9600 pulses per second
+    always @(posedge clk)
+    begin
+        if(BRG_counter == cycle_BRG)
+            begin
+                BRG_SET <= 1;
+                BRG_counter <= 0;
+            end
+         else
+            begin
+                BRG_counter <= BRG_counter + 1;
+                BRG_SET <= 0;
+            end
     end
     
-    assign state_debug = state;
-    assign debounce_counterdebug = debounce_counter;
-        
+    always @(transmit, state,BRG_SET, bit_counter)
+    begin
+        nextstate<=idle;
+        load<=0;
+        shift<=0;
+        clear<=0;
+        case(state) 
+            idle: //waiting for transmit button to be pressed
+            begin
+                if(transmit)
+                begin
+                    nextstate <= loading;
+                    load <= 1;
+                    Txd <= 1;
+                end
+                
+                else
+                begin
+                    nextstate <= idle;
+                    Txd <= 1;
+                end
+            end 
+            
+            loading: //button was pressed, keeping load signal high until BRG has been set so that data path can update the shift register
+            begin
+                if(BRG_SET)
+                begin
+                    nextstate <= sending;
+                    shift <= 1;
+                    Txd <= 1;
+                end
+                
+                else
+                begin
+                    nextstate <= loading;
+                    load <= 1;
+                    Txd <= 1;
+                end
+            end
+            
+            sending: //send data until 10 bits have been sent on TX line
+            begin
+                if(bit_counter == 10)
+                begin
+                    nextstate <= done;
+                    clear <= 1;
+                    Txd <= 1;
+                end
+                else
+                begin
+                    nextstate <= sending;
+                    shift <= 1;
+                    Txd <= shiftright_register[0];
+                end
+            end
+           
+            done: //once 10 bits sent, keep clear high and wait for BRG_SET to become 1 so that data path can reset the bit counter
+            begin
+                if(!transmit)
+                begin
+                    nextstate<=idle;
+                    Done <=1;
+                end
+                else
+                begin
+                    nextstate<=done;
+                    clear<= 1;
+                end
+            end  
+       endcase   
+    end
+    //controller for UART
+    always@(posedge clk)
+    begin
+       state<=nextstate;
+    end
     
+    //data path for UART
+    always @(posedge BRG_SET)
+    begin
+        if(load)
+        begin
+            shiftright_register <= {1'b1, data_send, 1'b0};
+            bit_counter <= 0;
+        end
+        else if(shift)
+        begin
+            shiftright_register <= shiftright_register >> 1;
+            bit_counter <= bit_counter +1;    
+        end
+        else if(clear)
+        begin
+            bit_counter <= 0; 
+        end    
+    end
     
 endmodule
