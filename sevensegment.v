@@ -17,10 +17,8 @@ module sevensegment#(parameter cycleBits = 21, sevensegment_cycle = 1600000)(inp
         begin
             LEDCycleCounter <= 0;
         end
-        
-        else
-        begin
-        if(LEDCycleCounter == sevensegment_cycle/4)
+
+        else if(LEDCycleCounter == sevensegment_cycle/4)
             begin
                 LEDCycleCounter <= 0;
                 LEDSET <= 1;
@@ -31,7 +29,6 @@ module sevensegment#(parameter cycleBits = 21, sevensegment_cycle = 1600000)(inp
                 LEDSET <= 0;
                 LEDCycleCounter <= LEDCycleCounter + 1;
             end
-        end
     end
 
     always@(posedge LEDSET)
