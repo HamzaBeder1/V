@@ -1,12 +1,11 @@
 `timescale 1ns / 1ps
 
 module UART_byte#(parameter cycle_BRG = 10416, idle = 2'b00, loading = 2'b01, sending = 2'b11, done = 2'b10, debounce_seconds = 2500)(
-input clk, input rst, input [7:0] data_send, input transmit, output reg Txd, output Done
+input clk, input rst, input [7:0] data_send, input transmit, output reg Txd, output reg BRG_SET, output Done
     );
     
     reg [13:0] BRG_counter;
     reg [9:0] bit_counter;
-    reg BRG_SET;
     
     reg [1:0] state;
     reg [1:0] nextstate;
