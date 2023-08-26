@@ -23,9 +23,7 @@ input clk, input rst, input [7:0] data_send, input transmit, output reg Txd, out
         state<=nextstate;
         if(rst)
             BRG_counter <= 0;
-        else
-        begin
-            if(BRG_counter == cycle_BRG)
+        else if(BRG_counter == cycle_BRG)
             begin
                 BRG_SET <= 1;
                 BRG_counter <= 0;
@@ -35,7 +33,6 @@ input clk, input rst, input [7:0] data_send, input transmit, output reg Txd, out
                 BRG_counter <= BRG_counter + 1;
                 BRG_SET <= 0;
             end
-        end
     end
     
     //controller for UART
@@ -122,3 +119,4 @@ input clk, input rst, input [7:0] data_send, input transmit, output reg Txd, out
         end   
     end
     
+endmodule
