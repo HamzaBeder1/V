@@ -1,12 +1,13 @@
 `timescale 1ns / 1ps
 
-module Top#(parameter debounce_count = 50000000, idle = 2'b00, sending = 2'b01, debouncing = 2'b10)(
+module Top#(parameter debounce_count = 50000000, idle = 2'b00, sending = 2'b01, waiting = 2'b11, debouncing = 2'b10)(
     input clk, input rst, input transmit, input [3:0] currLED, input [3:0] number, output [3:0] anodeOutput, output [7:0] cathodeOutput, output Txd
 );
     wire [3:0] LED0, LED1, LED2, LED3;
     wire [3:0] currNum;
     wire [7:0] currASCII;
     wire k;
+    wire BRG_SET;
     wire rst_segment;
     wire rst_UART;
     reg d;
@@ -14,18 +15,18 @@ module Top#(parameter debounce_count = 50000000, idle = 2'b00, sending = 2'b01, 
     integer debounce_counter;
     reg UART_start;
     wire UART_done;
-    assign currNum = (count == 0)? LED0: ((count == 1)? LED1: ((count == 2)? LED2: LED3));
-    assign k = (count == 4)? 1:0;
+    assign currNum = (count == 0)? LED0: ((count == 1)? LED1: ((count == 2)? LED2: ((count == 3)? LED3:2'bzz) ));
+    assign k = (count == 3)? 1:0;
     assign rst_segment = (rst == 1)? 1:0;
     assign rst_UART = (rst == 1)? 1:0;
     sevensegment s(clk, rst_segment, number, currLED, anodeOutput, cathodeOutput, LED0, LED1, LED2, LED3);
-    UART_byte u(clk, rst_UART, currASCII, UART_start, Txd, UART_done);
+    UART_byte u(clk, rst_UART, currASCII, UART_start, Txd, BRG_SET, UART_done);
     convertToASCII c(clk, currNum, currASCII);
 
     reg [1:0] state, nextstate;
     reg up, debounce;
 
-    always @(transmit, UART_done,k, d, count)
+    always @(state, count, transmit, UART_done, BRG_SET, k, d, count)
     begin
         nextstate<=0;
         up<=0;
@@ -40,24 +41,34 @@ module Top#(parameter debounce_count = 50000000, idle = 2'b00, sending = 2'b01, 
                 end
                 else
                 begin
-                    up<=1;
                     UART_start<=1;
-                    nextstate<=sending;
+                    nextstate<=waiting;
                 end
             end
+            
+            waiting:
+            begin
+                if(BRG_SET != 1)
+                begin
+                    nextstate<=waiting;
+                    UART_start<=1;
+                end
+                else
+                begin
+                    nextstate<=sending;
+                end
+            end 
             
             sending:
             begin
                 if(~UART_done)
                 begin
-                    UART_start<=1;
                     nextstate<=sending;
                 end
                 else if(~k)
                 begin
                     up<=1;
-                    UART_start<=1;
-                    nextstate<=sending;
+                    nextstate<=waiting;
                 end
                 else if(k)
                 begin
@@ -141,4 +152,3 @@ module convertToASCII(input clk, input [3:0] currNum, output reg [7:0] currASCII
         end
     end
 endmodule
-
