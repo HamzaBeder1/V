@@ -1,24 +1,4 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 07/27/2023 11:12:37 PM
-// Design Name: 
-// Module Name: coordic_arctanandmagnitude
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
 
 module coordic_arctanandmagnitude#(parameter n = 16, START_STATE = 3'b000, ADD_STATE = 3'b001, MULT_STATE = 3'b010, DONE_STATE = 3'b011)(input clk, input st, input[n-1:0] x, input[n-1:0] y,output [n-1:0] arctan, output [31:0] magnitude
 
