@@ -1,41 +1,25 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 07/28/2023 02:14:24 AM
-// Design Name: 
-// Module Name: arcsin_andarccos
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
 
-
-module arcsin_andarccos#(parameter n = 16) (input clk, input st, input [n-1:0] arcsin_in, output[n-1:0] arcsin, output [n-1:0] arccos, output done
+module arcsin_andarccos#(parameter n = 16) (input clk, input st, input [15:0] arcsin_in, input [3:0] func, output [31:0] result
 
     );
     wire k;
     integer i;
-    reg signed [n-1:0] reg_x[n:0];
-    reg signed [n-1:0] reg_y[n:0];
-    reg signed [n-1:0] reg_z[n:0];
+    reg signed [15:0] reg_x[n:0];
+    reg signed [15:0] reg_y[n:0];
+    reg signed [15:0] reg_z[n:0];
     
     reg[1:0] state, nextstate;
     reg load, add;
     
+    wire signed [15:0] arcsin, arccos;
+    wire done;
+    
+    assign result = (func == 2)? arccos :((func == 3)?arcsin:32'bz);
     assign k = (i == n)? 1:0;
     assign done = (state == 2)? 1:0;
-    assign arcsin = (done == 1)? reg_z[n]: 16'dx;
-    assign arccos = (done == 1)? ~{reg_z[n] - 16'b0110010010000111}+1:16'dx;
+    assign arcsin = (done == 1)? reg_z[n]: 16'dz;
+    assign arccos = (done == 1)? ~{reg_z[n] - 16'b0110010010000111}+1:16'dz;
     
     
     wire [15:0] TANROM[15:0];
