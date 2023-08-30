@@ -1,12 +1,11 @@
 `timescale 1ns / 1ps
 
-module coordic_arctanandmagnitude#(parameter n = 16, START_STATE = 3'b000, ADD_STATE = 3'b001, MULT_STATE = 3'b010, DONE_STATE = 3'b011)(input clk, input st, input[n-1:0] x, input[n-1:0] y,output [n-1:0] arctan, output [31:0] magnitude
-
+module arctan_andmagnitude#(n = 16, START_STATE = 3'b000, ADD_STATE = 3'b001, MULT_STATE = 3'b010, DONE_STATE = 3'b011)(input clk, input st, input[15:0] x, input[15:0] y, input [3:0] func, output [31:0] result
     );
-    reg signed [n-1:0] x_reg[n:0];
-    reg signed [n-1:0] y_reg [n:0];
-    reg signed [n-1:0] z_reg[n:0];
-    wire signed [n-1:0] d;
+    reg signed [15:0] x_reg[16:0];
+    reg signed [15:0] y_reg [16:0];
+    reg signed [15:0] z_reg[16:0];
+    wire signed [15:0] d;
     integer i;
     wire k;
     wire Mdone;
@@ -14,12 +13,14 @@ module coordic_arctanandmagnitude#(parameter n = 16, START_STATE = 3'b000, ADD_S
     reg[2:0] state, nextstate;
     reg load, add, mult;
     wire [63:0] mult_temp;
-    
+    wire[15:0] arctan;
+    wire [31:0] magnitude;
     assign done = (state == DONE_STATE)? 1:0;
     assign k = (i == 16)? 1:0;
     assign d = (y_reg[i] < 0)? 1:-1;
     assign arctan = (done == 1)? z_reg[16]:16'dx;
     assign magnitude = (done==1)? mult_temp[63:32]: 32'bx;
+    assign result = (func == 0)? arctan:((func == 1)? magnitude:32'bz);
     booth booth_alg (clk,mult,32'b00000000000000001001111000000000,{x_reg[16], 16'd0}, mult_temp, Mdone);
     
     wire [15:0] TANROM[15:0];
@@ -105,8 +106,5 @@ module coordic_arctanandmagnitude#(parameter n = 16, START_STATE = 3'b000, ADD_S
             i <= i+1;
         end
         
-    end
-    
-    
-    
+    end 
 endmodule
