@@ -1,7 +1,8 @@
 `timescale 1ns / 1ps
 
 module arctan_h #(parameter n = 16)(
-    input clk, input st,input compute, input [15:0] x_1, input[15:0] y_1, output [15:0] arctanh);
+    input clk, input st, input [15:0] x_1, input[15:0] y_1, input[3:0] func, output [15:0] arctanh,
+ output [31:0] result);
     wire k;
     reg signed [15:0] reg_z [n:1];
     reg signed [15:0] reg_x[n:1];
@@ -15,6 +16,7 @@ module arctan_h #(parameter n = 16)(
     reg load, add;
     assign k = (i ==16)? 1:0;
     assign arctanh = (state == 2'b10)? reg_z[16]:16'dz;
+    assign result = (func == 7)? arctanh:32'dz;
     assign LED_reset = (state == 2'b00)? 1:0;
     assign TANHROM[1] = 16'b0010001100100111;
     assign TANHROM[2] = 16'b0001000001011000;
@@ -64,7 +66,17 @@ module arctan_h #(parameter n = 16)(
             end
 
             2:
-                nextstate<=0;
+                begin
+                if(~st)
+                begin
+                    nextstate<=2;
+                end
+                else
+                begin
+                    load<=1;
+                    nextstate<=1;
+                end
+            end
         endcase
     end
 
