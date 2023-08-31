@@ -9,17 +9,12 @@ ser = serial.Serial(
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
-    timeout=10000
+    timeout=10
 )
 
 buff = []
-root = Tk()
-root.title("UART Project")
-label = Label(root, text="View the 7-segment digits below", font=("Arial", 25))
-label.pack()
 
 def processInput():
-    global num1
     global buff
     display = ser.read()
     display = str(display)
@@ -29,11 +24,11 @@ def processInput():
         convertBuff = [str(digit) for digit in buff]
         result = ' '.join(convertBuff).replace('b', '')
         result = result[::-1]
-        label.config(text=result)
+        print(result)
         buff = []
-    root.after(5000, processInput)
 
-root.after(5000, processInput)
-root.mainloop()
+def main():
+    processInput()
 
-
+if __name__ == "__main__":
+    main()
