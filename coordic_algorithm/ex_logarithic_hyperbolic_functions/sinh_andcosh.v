@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module sinh_andcosh #(parameter n = 16)(
-    input clk, input st, input [15:0] z_0, input [3:0] func, output [15:0] sinh, output [15:0] cosh, output [31:0] result);
+    input clk, input st, input [15:0] z_0, input [3:0] func, output signed [15:0] sinh, output signed [15:0] cosh, output signed [31:0] result);
     wire k;
     reg signed [15:0] reg_z [n:1];
     reg signed [15:0] reg_x[n:1];
@@ -17,7 +17,7 @@ module sinh_andcosh #(parameter n = 16)(
     assign k = (i ==16)? 1:0;
     assign sinh = (state == 2'b10)? reg_y[n]: 16'bz;
     assign cosh = (state == 2'b10)? reg_x[n]: 16'bz;
-    assign result = (func == 4)? cosh : ((func == 5)? sinh:32'bz);
+    assign result = (func == 4)? cosh : ((func == 5)? sinh:32'dz);
     
     
     assign LED_reset = (state == 2'b00)? 1:0;
@@ -69,7 +69,17 @@ module sinh_andcosh #(parameter n = 16)(
             end
 
             2:
-                nextstate<=0;
+                begin
+                if(~st)
+                begin
+                    nextstate<=2;
+                end
+                else
+                begin
+                    load<=1;
+                    nextstate<=1;
+                end
+            end
         endcase
     end
 
