@@ -13,14 +13,14 @@ module arctan_andmagnitude#(n = 16, START_STATE = 3'b000, ADD_STATE = 3'b001, MU
     reg[2:0] state, nextstate;
     reg load, add, mult;
     wire [63:0] mult_temp;
-    wire[15:0] arctan;
-    wire [31:0] magnitude;
+    wire signed [15:0] arctan;
+    wire signed [31:0] magnitude;
     assign done = (state == DONE_STATE)? 1:0;
     assign k = (i == 16)? 1:0;
     assign d = (y_reg[i] < 0)? 1:-1;
     assign arctan = (done == 1)? z_reg[16]:16'dx;
     assign magnitude = (done==1)? mult_temp[63:32]: 32'bx;
-    assign result = (func == 0)? arctan:((func == 1)? magnitude:32'bz);
+    assign result = (func == 0)? {arctan}:((func == 1)? magnitude:32'dz);
     booth booth_alg (clk,mult,32'b00000000000000001001111000000000,{x_reg[16], 16'd0}, mult_temp, Mdone);
     
     wire [15:0] TANROM[15:0];
@@ -83,7 +83,15 @@ module arctan_andmagnitude#(n = 16, START_STATE = 3'b000, ADD_STATE = 3'b001, MU
             
             DONE_STATE:
             begin
-                nextstate<=START_STATE;
+                if(~st)
+                begin
+                    nextstate<=DONE_STATE;
+                end
+                else
+                begin
+                    load<=1;
+                    nextstate<=ADD_STATE;
+                end
             end
         endcase
     end
