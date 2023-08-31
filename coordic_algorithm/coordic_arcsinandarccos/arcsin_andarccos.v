@@ -1,6 +1,26 @@
 `timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 07/28/2023 02:14:24 AM
+// Design Name: 
+// Module Name: arcsin_andarccos
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
 
-module arcsin_andarccos#(parameter n = 16) (input clk, input st, input [15:0] arcsin_in, input [3:0] func, output [31:0] result
+
+module arcsin_andarccos#(parameter n = 16) (input clk, input st, input signed [15:0] arcsin_in, input [3:0] func, output signed [31:0] result
 
     );
     wire k;
@@ -15,7 +35,7 @@ module arcsin_andarccos#(parameter n = 16) (input clk, input st, input [15:0] ar
     wire signed [15:0] arcsin, arccos;
     wire done;
     
-    assign result = (func == 2)? arccos :((func == 3)?arcsin:32'bz);
+    assign result = (func == 2)? arccos :((func == 3)?arcsin:32'dz);
     assign k = (i == n)? 1:0;
     assign done = (state == 2)? 1:0;
     assign arcsin = (done == 1)? reg_z[n]: 16'dz;
@@ -72,7 +92,17 @@ module arcsin_andarccos#(parameter n = 16) (input clk, input st, input [15:0] ar
         end
         
         2:
-            nextstate<=0;
+            begin
+                if(~st)
+                begin
+                    nextstate<=2;
+                end
+                else
+                begin
+                    load<=1;
+                    nextstate<=1;
+                end
+            end
         endcase
     end
     
