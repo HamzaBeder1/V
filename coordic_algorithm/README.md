@@ -7,6 +7,10 @@ To use this project, click the T17 button to walk through the states of the SM u
 | 7-Segment Output | Meaning 
 | ---------------- | ---
 |         F        |  Enter the function to compute using the 4 right-most switches. View the table below to see which values correspond to each function.
+|         E1       |  Enter the first operand |
+|         E2       |  Enter the second operand. Note that this state is skipped if the function chosen requires only a single operand.
+|         GO       |  This means the values that were entered are stored in registers, and the machine is ready to compute the function.
+|         Result   |   After viewing Go and pressing the T17 button once more, the results will be displayed onto the seven-segment display.
 
 | Function      | Number           
 | ------------- |:-------------:|
