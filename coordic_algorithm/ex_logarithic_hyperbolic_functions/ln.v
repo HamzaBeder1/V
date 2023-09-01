@@ -1,5 +1,17 @@
 `timescale 1ns / 1ps
 
+/*
+    This module is used for calculating e^x of the input.
+    
+    Inputs:
+            clk: Clock signal for controlling operations.
+            st: start signal that begins the CORDIC iterations
+            x: Input to pass into the function.
+            func: A register that determines if the output from the module should write to the result register and which function to write to it.
+            
+   Outputs:
+            result: This is a bus shared by the modules in this project. Depending on func, this module either writes High-Z or the output it computes.
+*/
 module ln_x(
     input clk, input st, input [15:0] x,input[3:0] func, output signed [31:0] result
     );
