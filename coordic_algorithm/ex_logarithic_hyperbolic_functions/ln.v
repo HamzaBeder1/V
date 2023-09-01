@@ -17,11 +17,11 @@ module ln_x(
     );
     wire [16:0] ln;
     wire [15:0] ln_temp;
+    wire [31:0] result_temp;
     wire [15:0] x_1, y_1;
     assign x_1 = x+16'b0100000000000000;
     assign y_1 = x-16'b0100000000000000;
-    
-    arctan_h atanh (clk, st,x_1, y_1, func, ln_temp, result);
+    arctan_h atanh (clk, st,x_1, y_1, func, ln_temp, result_temp);
     assign ln = ln_temp <<< 1;
     assign result = (func == 8)? ln:32'dz;
     
