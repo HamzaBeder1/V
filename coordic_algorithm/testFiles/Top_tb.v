@@ -44,7 +44,7 @@ module Toptb #(parameter n = 8, wait_count = 70, INITIAL_STATE = 3'b000, F_STATE
     wire f_done;
     wire wait_done;
     wire two_ops, one_op;
-    wire done;
+    reg done;
     
     initial
     begin
@@ -75,6 +75,7 @@ module Toptb #(parameter n = 8, wait_count = 70, INITIAL_STATE = 3'b000, F_STATE
         INCI<=0;
         INCJ<=0;
         w<=0;
+        done<=0;
         case(state)
             INITIAL_STATE:
             begin
@@ -104,7 +105,10 @@ module Toptb #(parameter n = 8, wait_count = 70, INITIAL_STATE = 3'b000, F_STATE
                     w<=1;
                     st<=1;
                     F<=1;
-                    nextstate<= E1_STATE;
+                    if(i == 0 || i == 1 || i == 7)
+                        nextstate<= E1_STATE;
+                    else
+                        nextstate<=E2_STATE;
                 end
             end
             
@@ -133,13 +137,14 @@ module Toptb #(parameter n = 8, wait_count = 70, INITIAL_STATE = 3'b000, F_STATE
                     E2<=1;
                     nextstate<=E2_STATE;
                 end
+                
                 else
                 begin
                     w<=1;
-                    E2<=1;
                     INCJ<=1;
                     st<=1;
                     nextstate<=GO_STATE;
+                    E2<=1;
                 end
             end
             
@@ -169,6 +174,7 @@ module Toptb #(parameter n = 8, wait_count = 70, INITIAL_STATE = 3'b000, F_STATE
                 begin
                     w<=1;
                     st<=1;
+                    done<=1;
                     if(op_done)
                         INCI<=1;
                     nextstate<=F_STATE;
@@ -211,6 +217,5 @@ module Toptb #(parameter n = 8, wait_count = 70, INITIAL_STATE = 3'b000, F_STATE
     assign two_ops = (i == 0 || i == 1 || i== 7)? 1:0;
     assign one_op = ~two_ops;
     assign wait_done = (wait_counter == wait_count)? 1:0;
-    assign done = (state == RESULT_STATE)? 1:0;
     Top DUT(clk, st, sw_in, anodeOutput, cathodeOutput);
 endmodule
