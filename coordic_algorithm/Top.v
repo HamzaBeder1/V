@@ -1,5 +1,19 @@
 `timescale 1ns / 1ps
 
+/*
+    This is the Top module uses the other modules to take some function and operands as input,
+    compute the results, and then display them.
+    
+    Inputs:
+            clk: Clock signal 
+            st:  Used for transitioning states. The SM go from entering a function, to entering operands, to finally computing the results.
+            sw_in: The Basys3 switches used to input operands and operations.
+            
+    Outputs:
+            anodeOutput: Used to drive the anodes.
+            cathodeOutput: Used to drive the cathodes.
+*/
+
 module Top#(parameter debounce_count = 50000000, START_STATE = 3'b000,DEBOUNCE_STATE = 3'b001, SELECT_STATE = 3'b010, ENTER1_STATE = 3'b011, ENTER2_STATE = 3'b100, READY_STATE = 3'b101, DONE_STATE = 3'b110)(input clk, input st, input[15:0] sw_in, output [3:0] anodeOutput, output [7:0] cathodeOutput
 
     );
@@ -10,18 +24,14 @@ module Top#(parameter debounce_count = 50000000, START_STATE = 3'b000,DEBOUNCE_S
     reg signed [15:0] op1, op2;
     reg debounce_done;
     wire[31:0] result;
+    
     wire[15:0] sinh;
     wire [15:0] cosh;
     wire [15:0] atanh;
-    integer debounce_counter;
+    //temp wires; the purpose is only to feed into sinh, cosh, and atanh modules.
     
-    arctan_andmagnitude atan_mag(clk, compute,op1, op2,func, result);
-    arcsin_andarccos asin_andacos(clk, compute, op1, func, result);
-    sinh_andcosh sh_andch(clk, compute, op1, func, sinh, cosh, result);
-    arctan_h ath(clk, compute, op1, op2, func, atanh, result);
-    ex e_x(clk, compute, op1, func, result);
-    ln_x lnx(clk, compute, op1, func, result);
-    sevensegment s(clk, idle, state, result, anodeOutput, cathodeOutput);
+    integer debounce_counter;
+    //Used for avoiding issues with switch bounces when setting st.
     always@(state,st, k, debounce_done, func)
     begin
         nextstate<=0;
@@ -208,4 +218,12 @@ module Top#(parameter debounce_count = 50000000, START_STATE = 3'b000,DEBOUNCE_S
             k<=0;
         end
     end
+    
+    arctan_andmagnitude atan_mag(clk, compute,op1, op2,func, result);
+    arcsin_andarccos asin_andacos(clk, compute, op1, func, result);
+    sinh_andcosh sh_andch(clk, compute, op1, func, sinh, cosh, result);
+    arctan_h ath(clk, compute, op1, op2, func, atanh, result);
+    ex e_x(clk, compute, op1, func, result);
+    ln_x lnx(clk, compute, op1, func, result);
+    sevensegment s(clk, idle, state, result, anodeOutput, cathodeOutput);
 endmodule
