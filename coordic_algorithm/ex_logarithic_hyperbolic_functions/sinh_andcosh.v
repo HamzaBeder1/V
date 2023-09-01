@@ -1,25 +1,36 @@
 `timescale 1ns / 1ps
 
+/*
+    This module is used for calculating cosh and sinh of the input.
+    
+    Inputs:
+            clk: Clock signal for controlling operations.
+            st: start signal that begins the CORDIC iterations
+            z_0: Initial value in the z register that is angle input to the module.
+            func: A register that determines if the output from the module should write to the result register and which function to write to it.
+            
+   Outputs:
+            sinh and cosh: The results of the computation. The purpose of these registers is to feed into the e^x module.
+            result: This is a bus shared by the modules in this project. Depending on func, this module either writes High-Z or the output it computes.
+*/
 module sinh_andcosh #(parameter n = 16)(
     input clk, input st, input [15:0] z_0, input [3:0] func, output signed [15:0] sinh, output signed [15:0] cosh, output signed [31:0] result);
-    wire k;
     reg signed [15:0] reg_z [n:1];
     reg signed [15:0] reg_x[n:1];
     reg signed [15:0] reg_y [n:1];
     integer i;
     reg sign;
-    wire [15:0] TANHROM [n-1:1];
-    wire LED_reset;
     
-    
+    //SM logic
     reg [1:0] state, nextstate;
     reg load, add;
-    assign k = (i ==16)? 1:0;
-    assign sinh = (state == 2'b10)? reg_y[n]: 16'bz;
-    assign cosh = (state == 2'b10)? reg_x[n]: 16'bz;
-    assign result = (func == 4)? cosh : ((func == 5)? sinh:32'dz);
     
+    wire LED_reset;
+    wire k;
+    wire [15:0] TANHROM [n-1:1];
+    //a LUT used to store the arctan(2^-i), where i+1 is the current CORDIC iteration.
     
+    //Setting values for the arctan LUT
     assign LED_reset = (state == 2'b00)? 1:0;
     assign TANHROM[1] = 16'b0010001100100111;
     assign TANHROM[2] = 16'b0001000001011000;
@@ -110,4 +121,9 @@ module sinh_andcosh #(parameter n = 16)(
             end
         end
     end
+    
+    assign k = (i ==16)? 1:0;
+    assign sinh = (state == 2'b10)? reg_y[n]: 16'bz;
+    assign cosh = (state == 2'b10)? reg_x[n]: 16'bz;
+    assign result = (func == 4)? cosh : ((func == 5)? sinh:32'dz);
 endmodule
