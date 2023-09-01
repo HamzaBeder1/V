@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module Toptb #(parameter n = 8, wait_count = 20, START_STATE = 3'b000,DEBOUNCE_STATE = 3'b001, SELECT_STATE = 3'b010, ENTER1_STATE = 3'b011, ENTER2_STATE = 3'b100, READY_STATE = 3'b101, DONE_STATE = 3'b110)();
+module Toptb #(parameter n = 8, wait_count = 70, INITIAL_STATE = 3'b000, F_STATE = 3'b001, E1_STATE = 3'b010, E2_STATE = 3'b011, GO_STATE = 3'b100, RESULT_STATE = 3'b101)();
     reg clk;
     reg st;
     reg [15:0] sw_in;
@@ -42,8 +42,9 @@ module Toptb #(parameter n = 8, wait_count = 20, START_STATE = 3'b000,DEBOUNCE_S
     reg w;
     wire op_done;
     wire f_done;
-    reg wait_done;
+    wire wait_done;
     wire two_ops, one_op;
+    wire done;
     
     initial
     begin
@@ -52,15 +53,14 @@ module Toptb #(parameter n = 8, wait_count = 20, START_STATE = 3'b000,DEBOUNCE_S
         i = 0;
         j = 1;
         wait_counter = 0;
-        wait_done = 0;
-        op_arr[1] = {{16'b0100000000000000}, {16'd0}};
-        op_arr[2] = {{16'b0100000000000000}, {16'b0010101010011011}};
-        op_arr[3] = {{16'b0100000000000000}, {16'b0110010010000111}};
-        op_arr[4] = {{16'b0010000000000000}, {16'b0110010010000111}};
-        op_arr[5] = {{16'b0100000000000000}, {16'b0010000000000000}};
-        op_arr[6] = {{16'b0100000000000000}, {16'b0001100110011001}};
-        op_arr[7] = {{16'b0100000000000000}, {16'b0000011001100110}};
-        op_arr[8] = {{16'b0100000000000000}, {16'b0001000000000000}};
+        op_arr[1] = {{16'b0100000000000000}, {16'd0}}; //op1=1 and op2 = 0
+        op_arr[2] = {{16'b0100000000000000}, {16'b0010101010011011}}; //op1 = 1 and op2 = 0.6657
+        op_arr[3] = {{16'b0100000000000000}, {16'b0110010010000111}}; //op1 = 1 and op2 = pi/2
+        op_arr[4] = {{16'b0010000000000000}, {16'b0110010010000111}}; //op1 = 0.5 and op2 = pi/2
+        op_arr[5] = {{16'b0100000000000000}, {16'b0010000000000000}}; //op1 = 1 and op2 = 0.5
+        op_arr[6] = {{16'b0100000000000000}, {16'b0001100110011001}}; //op1 = 1 and op2 = 0.4
+        op_arr[7] = {{16'b0100000000000000}, {16'b0000011001100110}}; //op1 = 1 and op2 = 0.1
+        op_arr[8] = {{16'b0100000000000000}, {16'b0001000000000000}}; //op1 = 1 and op2 = 0.25
     end
     
     
@@ -76,113 +76,114 @@ module Toptb #(parameter n = 8, wait_count = 20, START_STATE = 3'b000,DEBOUNCE_S
         INCJ<=0;
         w<=0;
         case(state)
-        0:
-        begin
-            if(~wait_done)
+            INITIAL_STATE:
             begin
-                w<=1;
-                nextstate<=0;
-            end
-            else
-            begin
-                st<=1;
-                F<=1;
-                nextstate<=1;
-            end
-        end
-        
-        1:
-        begin
-            if(~wait_done)
-            begin
-                w<=1;
-                F<=1;
-                nextstate<=1;
-            end
-            else
-            begin
-                if(f_done)
-                    nextstate<=6;
-                else if(two_ops)
+                if(~wait_done)
                 begin
-                    F<=1;
-                    nextstate<=2;
+                    w<=1;
+                    nextstate<=INITIAL_STATE;
                 end
-                else if(one_op)
+                else
                 begin
-                    F<=1;
-                    nextstate<=3;
+                    w<=1;
+                    st<=1;
+                    nextstate<= F_STATE;
                 end
             end
-        end
-        
-        2:
-        begin
-            E1<=1;
-            if(~wait_done)
+            
+            F_STATE:
             begin
-                w<=1;
-                nextstate<=2;
+                if(~wait_done)
+                begin
+                    F<=1;
+                    w<=1;
+                    nextstate<=F_STATE;
+                end
+                else
+                begin
+                    w<=1;
+                    st<=1;
+                    F<=1;
+                    nextstate<= E1_STATE;
+                end
             end
-            else
+            
+            E1_STATE:
             begin
-                st<=1;
-                nextstate<=3;
+                if(~wait_done)
+                begin
+                    w<=1;
+                    E1<=1;
+                    nextstate<=E1_STATE;
+                end
+                else
+                begin
+                    w<=1;
+                    E1<=1;
+                    st<=1;
+                    nextstate<=E2_STATE;
+                end
             end
-        end
-        
-        3:
-        begin
-            E2<=1;
-            if(~wait_done)
+            
+            E2_STATE:
             begin
-                w<=1;
-                nextstate<=3;
+                if(~wait_done)
+                begin
+                    w<=1;
+                    E2<=1;
+                    nextstate<=E2_STATE;
+                end
+                else
+                begin
+                    w<=1;
+                    E2<=1;
+                    INCJ<=1;
+                    st<=1;
+                    nextstate<=GO_STATE;
+                end
             end
-            else
+            
+            GO_STATE:
             begin
-                st<=1;
-                INCJ<=1;
-                nextstate<=4;
+                if(~wait_done)
+                begin
+                    w <=1;
+                    nextstate<=GO_STATE;
+                end
+                else
+                begin
+                    w<=1;
+                    st<=1;
+                    nextstate<=RESULT_STATE;
+                end
             end
-        end
-        
-        4:
-        begin
-            if(~wait_done)
+            
+            RESULT_STATE:
             begin
-                w<=1;
-                nextstate<=4;
+                if(~wait_done)
+                begin
+                    w<=1;
+                    nextstate<=RESULT_STATE;
+                end
+                else
+                begin
+                    w<=1;
+                    st<=1;
+                    if(op_done)
+                        INCI<=1;
+                    nextstate<=F_STATE;
+                end
             end
-            else
-            begin
-                st<=1;
-                nextstate<=5;
-            end
-        end
-        
-        5:begin
-            if(op_done)
-                INCI<=1;
-            nextstate<=1;
-        end
-        
-        6:
-        begin
-            nextstate<=6;
-        end
         endcase
     end
     
     always@(posedge clk)
     begin
         state<=nextstate;
-        wait_done <=0;
         if(w)
         begin
             if(wait_counter == wait_count)
             begin
-                wait_done <=1;
                 wait_counter <=0;
             end
             else
@@ -203,8 +204,10 @@ module Toptb #(parameter n = 8, wait_count = 20, START_STATE = 3'b000,DEBOUNCE_S
     end
     
     assign op_done = (j == n+1)? 1:0;
-    assign f_done = (i == 8)? 1:0;
+    assign f_done = (i == 9)? 1:0;
     assign two_ops = (i == 0 || i == 1 || i== 7)? 1:0;
     assign one_op = ~two_ops;
+    assign wait_done = (wait_counter == wait_count)? 1:0;
+    assign done = (state == RESULT_STATE)? 1:0;
     Top DUT(clk, st, sw_in, anodeOutput, cathodeOutput);
 endmodule
