@@ -6,6 +6,7 @@ To use this project, click the T17 button to walk through the states of the SM u
 
 | 7-Segment Output | Meaning 
 | ---------------- | ---
+|         F        |  Enter the function to compute using the 4 right-most switches. View the table below to see which values correspond to each function.
 
 | Function      | Number           
 | ------------- |:-------------:|
