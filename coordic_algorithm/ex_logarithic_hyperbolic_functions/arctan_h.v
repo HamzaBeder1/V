@@ -1,5 +1,17 @@
 `timescale 1ns / 1ps
 
+/*
+    This module is used for calculating e^x of the input.
+    
+    Inputs:
+            clk: Clock signal for controlling operations.
+            st: start signal that begins the CORDIC iterations
+            x_1 and y_1: The initial valuesof the reg_x and reg_y registers and also the inputs to thee function.
+            func: A register that determines if the output from the module should write to the result register and which function to write to it.
+            
+   Outputs:
+            result: This is a bus shared by the modules in this project. Depending on func, this module either writes High-Z or the output it computes.
+*/
 module arctan_h #(parameter n = 16)(
     input clk, input st, input [15:0] x_1, input[15:0] y_1, input[3:0] func, output [15:0] arctanh,
  output [31:0] result);
