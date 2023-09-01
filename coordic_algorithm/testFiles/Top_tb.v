@@ -198,7 +198,10 @@ module Toptb #(parameter n = 8, wait_count = 70, INITIAL_STATE = 3'b000, F_STATE
         if(E2)
             sw_in <= op_arr[j][15:0];
         if(INCI)
+        begin
             i<=i+1;
+            j<=1;
+        end
         if(INCJ)
             j<=j+1;
     end
