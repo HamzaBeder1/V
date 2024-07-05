@@ -1,5 +1,6 @@
 General-Purpose CORDIC Algorithm on Basys3 Board.
 ------
+## Purpose
 This project implements the CORDIC Algorithm; CORDIC is a hardware-efficient algorithm that is used to compute trigonometric and hyperbolic functions.
 
 To use this project, click the T17 button to walk through the states of the SM used to create this design. The 7-segment display will display values to show what state the machine is currently on:  
